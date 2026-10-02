@@ -21,23 +21,37 @@ jobs:
         run: |
           cargo build --release --target aarch64-apple-ios
 
-      - name: Prepare
+      - name: Prepare package
         run: |
-          mkdir -p dist/CLEO-LiveContainer-Diagnostic
+          mkdir -p dist
 
           cp diagnostic/target/aarch64-apple-ios/release/libcleo_diagnostic.dylib \
-             dist/CLEO-LiveContainer-Diagnostic/CLEO.dylib
+            dist/CLEO.dylib
 
-          cat > dist/CLEO-LiveContainer-Diagnostic/CLEO.plist <<'PLIST'
-          { Filter = { Executables = ( "gta3sa", "gtasager", "gtasa" ); }; }
+          cat > dist/CLEO.plist <<'PLIST'
+          {
+              Filter = {
+                  Executables = (
+                      "gta3sa",
+                      "gtasager",
+                      "gtasa"
+                  );
+              };
+          }
           PLIST
+
+      - name: Verify package
+        run: |
+          file dist/CLEO.dylib
+          ls -lh dist/
+          echo "No codesigning is performed here."
 
       - name: Zip
         run: |
           cd dist
-          zip -r ../CLEO-LiveContainer-Diagnostic.zip CLEO-LiveContainer-Diagnostic
+          zip -r ../CLEO-LiveContainer-Diagnostic.zip .
 
-      - name: Upload
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: CLEO-LiveContainer-Diagnostic
