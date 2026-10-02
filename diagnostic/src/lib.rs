@@ -9,36 +9,29 @@ fn cleo_runtime_init() {
 
     let cleo_dir = home.join("Documents").join("CLEO");
 
-    // Create the basic CLEO runtime directory structure.
-    if fs::create_dir_all(cleo_dir.join("scripts")).is_err() {
+    // Automatically create the CLEO runtime directory.
+    if fs::create_dir_all(&cleo_dir).is_err() {
         return;
     }
 
-    if fs::create_dir_all(cleo_dir.join("config")).is_err() {
-        return;
-    }
+    // Create the directories we'll use for the runtime later.
+    let _ = fs::create_dir_all(cleo_dir.join("scripts"));
+    let _ = fs::create_dir_all(cleo_dir.join("config"));
+    let _ = fs::create_dir_all(cleo_dir.join("runtime"));
 
-    if fs::create_dir_all(cleo_dir.join("runtime")).is_err() {
-        return;
-    }
-
-    // Write a runtime status file.
-    let status = cleo_dir.join("runtime").join("status.txt");
-
+    // Diagnostic marker proving the dylib initializer executed.
     let _ = fs::write(
-        status,
-        b"CLEO runtime initialized successfully.\n\
-         Platform: iOS\n\
-         Architecture: arm64\n\
-         Loader: LiveContainer/TweakLoader\n",
+        cleo_dir.join("LIVE_CONTAINER_DIAGNOSTIC.txt"),
+        b"CLEO LiveContainer diagnostic loaded successfully.\n",
     );
 
-    // Keep the original diagnostic marker too.
-    let diagnostic = cleo_dir.join("LIVE_CONTAINER_DIAGNOSTIC.txt");
-
+    // Runtime status.
     let _ = fs::write(
-        diagnostic,
-        b"CLEO LiveContainer diagnostic loaded successfully.\n",
+        cleo_dir.join("runtime").join("status.txt"),
+        b"CLEO runtime initialized successfully.\n\
+Platform: iOS\n\
+Architecture: arm64\n\
+Loader: LiveContainer/TweakLoader\n",
     );
 }
 
