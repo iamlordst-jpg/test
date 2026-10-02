@@ -1,4 +1,4 @@
-name: Build CLEO Diagnostic
+name: Build CLEO LiveContainer v0.6
 
 on:
   workflow_dispatch:
@@ -40,19 +40,21 @@ jobs:
           }
           PLIST
 
+          cp diagnostic/commands.bin dist/commands.bin
+
       - name: Verify package
         run: |
           file dist/CLEO.dylib
           ls -lh dist/
           echo "No codesigning is performed here."
 
-      - name: Zip
+      - name: Create ZIP
         run: |
           cd dist
-          zip -r ../CLEO-LiveContainer-Diagnostic.zip .
+          zip -r ../CLEO-LiveContainer-v0.6.zip .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CLEO-LiveContainer-Diagnostic
-          path: CLEO-LiveContainer-Diagnostic.zip
+          name: CLEO-LiveContainer-v0.6
+          path: CLEO-LiveContainer-v0.6.zip
