@@ -14,19 +14,70 @@ fn write_file(path: &Path, contents: &[u8]) {
     let _ = fs::write(path, contents);
 }
 
-fn discover_scripts(root: &Path) {
-    let scripts_dir = root.join("scripts");
+fn parse_print_command(line: &str) -> Option<String> {
+    let line = line.trim();
 
-    let mut log = String::from(
-        "CLEO Script Loader\n\
-==================\n",
+    if !line.starts_with("PRINT ") {
+        return None;
+    }
+
+    let value = line[6..].trim();
+
+    if value.len() >= 2 && value.starts_with('"') && value.ends_with('"') {
+        return Some(value[1..value.len() - 1].to_string());
+    }
+
+    None
+}
+
+fn execute_script(root: &Path, script_path: &Path, runtime_log: &mut String) {
+    let contents = match fs::read_to_string(script_path) {
+        Ok(contents) => contents,
+        Err(_) => {
+            runtime_log.push_str("[error] Could not read script\n");
+            return;
+        }
+    };
+
+    let script_name = script_path
+        .file_name()
+        .map(|name| name.to_string_lossy())
+        .unwrap_or_default();
+
+    runtime_log.push_str(&format!("[script] {}\n", script_name));
+
+    for line in contents.lines() {
+        let line = line.trim();
+
+        if line.is_empty() || line.starts_with("//") {
+            continue;
+        }
+
+        if let Some(message) = parse_print_command(line) {
+            runtime_log.push_str("[command] PRINT\n");
+            runtime_log.push_str(&format!("[text] {}\n", message));
+        } else {
+            runtime_log.push_str(&format!("[unknown] {}\n", line));
+        }
+    }
+
+    runtime_log.push('\n');
+}
+
+fn load_scripts(root: &Path) {
+    let scripts_dir = root.join("scripts");
+    let runtime_log_path = root.join("logs").join("runtime.log");
+
+    let mut runtime_log = String::from(
+        "CLEO Custom Runtime\n\
+====================\n\n",
     );
 
     let entries = match fs::read_dir(&scripts_dir) {
         Ok(entries) => entries,
         Err(_) => {
-            log.push_str("\nUnable to read scripts directory.\n");
-            write_file(&root.join("logs").join("scripts.log"), log.as_bytes());
+            runtime_log.push_str("[error] Could not read scripts directory.\n");
+            write_file(&runtime_log_path, runtime_log.as_bytes());
             return;
         }
     };
@@ -45,22 +96,22 @@ fn discover_scripts(root: &Path) {
         };
 
         if extension.to_string_lossy().eq_ignore_ascii_case("cs") {
-            if let Some(name) = path.file_name() {
-                scripts.push(name.to_string_lossy().to_string());
-            }
+            scripts.push(path);
         }
     }
 
     scripts.sort();
 
-    log.push_str(&format!("\nFound {} script(s)\n\n", scripts.len()));
+    runtime_log.push_str(&format!(
+        "Found {} script(s)\n\n",
+        scripts.len()
+    ));
 
-    for script in &scripts {
-        log.push_str(script);
-        log.push('\n');
+    for script in scripts {
+        execute_script(root, &script, &mut runtime_log);
     }
 
-    write_file(&root.join("logs").join("scripts.log"), log.as_bytes());
+    write_file(&runtime_log_path, runtime_log.as_bytes());
 }
 
 pub fn cleo_init() {
@@ -68,33 +119,29 @@ pub fn cleo_init() {
         return;
     };
 
-    // Runtime directories.
     create_directory(&root);
     create_directory(&root.join("scripts"));
     create_directory(&root.join("config"));
     create_directory(&root.join("plugins"));
     create_directory(&root.join("logs"));
 
-    // Startup marker.
     write_file(
         &root.join("logs").join("startup.log"),
         b"CLEO custom runtime initialized successfully.\n",
     );
 
-    // Runtime information.
     write_file(
         &root.join("config").join("runtime.txt"),
         b"CLEO Custom Runtime\n\
-Version: 0.2.0\n\
+Version: 0.3.0\n\
 Platform: iOS arm64\n\
 Loader: LiveContainer\n\
-Script discovery: enabled\n",
+Script discovery: enabled\n\
+Script execution: enabled\n",
     );
 
-    // Discover .cs scripts.
-    discover_scripts(&root);
+    load_scripts(&root);
 
-    // Keep the original diagnostic marker.
     write_file(
         &root.join("LIVE_CONTAINER_DIAGNOSTIC.txt"),
         b"CLEO LiveContainer diagnostic loaded successfully.\n",
