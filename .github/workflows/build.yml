@@ -21,6 +21,19 @@ jobs:
         run: |
           cargo build --release --target aarch64-apple-ios
 
+      - name: Sign dylib
+        run: |
+          codesign \
+            --force \
+            --sign - \
+            --timestamp=none \
+            diagnostic/target/aarch64-apple-ios/release/libcleo_diagnostic.dylib
+
+      - name: Verify signature
+        run: |
+          codesign --verify --verbose \
+            diagnostic/target/aarch64-apple-ios/release/libcleo_diagnostic.dylib
+
       - name: Prepare
         run: |
           mkdir -p dist
