@@ -14,6 +14,55 @@ fn write_file(path: &Path, contents: &[u8]) {
     let _ = fs::write(path, contents);
 }
 
+fn discover_scripts(root: &Path) {
+    let scripts_dir = root.join("scripts");
+
+    let mut log = String::from(
+        "CLEO Script Loader\n\
+==================\n",
+    );
+
+    let entries = match fs::read_dir(&scripts_dir) {
+        Ok(entries) => entries,
+        Err(_) => {
+            log.push_str("\nUnable to read scripts directory.\n");
+            write_file(&root.join("logs").join("scripts.log"), log.as_bytes());
+            return;
+        }
+    };
+
+    let mut scripts = Vec::new();
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+
+        if !path.is_file() {
+            continue;
+        }
+
+        let Some(extension) = path.extension() else {
+            continue;
+        };
+
+        if extension.to_string_lossy().eq_ignore_ascii_case("cs") {
+            if let Some(name) = path.file_name() {
+                scripts.push(name.to_string_lossy().to_string());
+            }
+        }
+    }
+
+    scripts.sort();
+
+    log.push_str(&format!("\nFound {} script(s)\n\n", scripts.len()));
+
+    for script in &scripts {
+        log.push_str(script);
+        log.push('\n');
+    }
+
+    write_file(&root.join("logs").join("scripts.log"), log.as_bytes());
+}
+
 pub fn cleo_init() {
     let Some(root) = cleo_root() else {
         return;
@@ -32,16 +81,20 @@ pub fn cleo_init() {
         b"CLEO custom runtime initialized successfully.\n",
     );
 
-    // Runtime version information.
+    // Runtime information.
     write_file(
         &root.join("config").join("runtime.txt"),
         b"CLEO Custom Runtime\n\
-Version: 0.1.0\n\
+Version: 0.2.0\n\
 Platform: iOS arm64\n\
-Loader: LiveContainer\n",
+Loader: LiveContainer\n\
+Script discovery: enabled\n",
     );
 
-    // Temporary diagnostic marker.
+    // Discover .cs scripts.
+    discover_scripts(&root);
+
+    // Keep the original diagnostic marker.
     write_file(
         &root.join("LIVE_CONTAINER_DIAGNOSTIC.txt"),
         b"CLEO LiveContainer diagnostic loaded successfully.\n",
