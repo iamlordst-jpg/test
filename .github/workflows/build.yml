@@ -21,28 +21,21 @@ jobs:
         run: |
           cargo build --release --target aarch64-apple-ios
 
-      - name: Sign dylib
-        run: |
-          codesign \
-            --force \
-            --sign - \
-            --timestamp=none \
-            diagnostic/target/aarch64-apple-ios/release/libcleo_diagnostic.dylib
-
-      - name: Verify signature
-        run: |
-          codesign --verify --verbose \
-            diagnostic/target/aarch64-apple-ios/release/libcleo_diagnostic.dylib
-
       - name: Prepare
         run: |
-          mkdir -p dist
-          cp diagnostic/target/aarch64-apple-ios/release/libcleo_diagnostic.dylib dist/CLEO.dylib
+          mkdir -p dist/CLEO-LiveContainer-Diagnostic
+
+          cp diagnostic/target/aarch64-apple-ios/release/libcleo_diagnostic.dylib \
+             dist/CLEO-LiveContainer-Diagnostic/CLEO.dylib
+
+          cat > dist/CLEO-LiveContainer-Diagnostic/CLEO.plist <<'PLIST'
+          { Filter = { Executables = ( "gta3sa", "gtasager", "gtasa" ); }; }
+          PLIST
 
       - name: Zip
         run: |
           cd dist
-          zip -r ../CLEO-LiveContainer-Diagnostic.zip .
+          zip -r ../CLEO-LiveContainer-Diagnostic.zip CLEO-LiveContainer-Diagnostic
 
       - name: Upload
         uses: actions/upload-artifact@v4
