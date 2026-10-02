@@ -1,0 +1,38 @@
+name: Build CLEO Diagnostic
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-13
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios
+
+      - name: Build
+        working-directory: diagnostic
+        run: |
+          cargo build --release --target aarch64-apple-ios
+
+      - name: Prepare
+        run: |
+          mkdir -p dist
+          cp diagnostic/target/aarch64-apple-ios/release/libcleo_diagnostic.dylib dist/CLEO.dylib
+
+      - name: Zip
+        run: |
+          cd dist
+          zip -r ../CLEO-LiveContainer-Diagnostic.zip .
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: CLEO-LiveContainer-Diagnostic
+          path: CLEO-LiveContainer-Diagnostic.zip
