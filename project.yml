@@ -2,7 +2,7 @@ name: ClaudePocket
 options:
   bundleIdPrefix: com.pocket
   deploymentTarget:
-    iOS: "16.0"
+    iOS: "17.0"
 packages:
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
