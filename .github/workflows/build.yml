@@ -19,7 +19,11 @@ jobs:
             -derivedDataPath build \
             -skipPackagePluginValidation -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            build
+            build > build.log 2>&1 || {
+              grep -E "error:" build.log | sort -u | head -12 | while read -r l; do echo "::error::$l"; done
+              tail -n 15 build.log | while read -r l; do echo "::warning::$l"; done
+              exit 1
+            }
       - name: Package IPA
         run: |
           mkdir Payload
