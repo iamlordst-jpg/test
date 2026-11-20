@@ -1,0 +1,28 @@
+name: ClaudePocket
+options:
+  bundleIdPrefix: com.pocket
+  deploymentTarget:
+    iOS: "16.0"
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: 1.2.0
+  Citadel:
+    url: https://github.com/orlandos-nl/Citadel
+    from: 0.7.0
+targets:
+  ClaudePocket:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    dependencies:
+      - package: SwiftTerm
+      - package: Citadel
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pocket.claudepocket
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: ClaudePocket
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
