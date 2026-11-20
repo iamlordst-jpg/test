@@ -10,6 +10,9 @@ packages:
   Citadel:
     url: https://github.com/orlandos-nl/Citadel
     from: 0.7.0
+  swift-nio:
+    url: https://github.com/apple/swift-nio
+    from: 2.60.0
 targets:
   ClaudePocket:
     type: application
@@ -18,6 +21,8 @@ targets:
     dependencies:
       - package: SwiftTerm
       - package: Citadel
+      - package: swift-nio
+        product: NIOCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.pocket.claudepocket
@@ -26,3 +31,5 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: ClaudePocket
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
